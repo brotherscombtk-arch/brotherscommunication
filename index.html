@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>InvoicePro - Professional Invoicing System</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div id="app">
+        <!-- LOGIN SCREEN -->
+        <div id="loginScreen" class="login-container">
+            <div class="login-card glass">
+                <div class="login-header">
+                    <img id="loginLogo" src="https://via.placeholder.com/80x80/2563eb/FFFFFF?text=IN" alt="Logo" class="company-logo">
+                    <h1>Invoice<span>Pro</span></h1>
+                    <p class="subtitle">Professional Invoicing System</p>
+                </div>
+                <div class="login-form">
+                    <div class="input-group">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="loginUsername" placeholder="Username" autocomplete="username">
+                    </div>
+                    <div class="input-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
+                    </div>
+                    <button class="btn-primary" onclick="handleLogin()">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </button>
+                    <div id="loginError" class="error-message"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN APP -->
+        <div id="mainApp" style="display:none;">
+            <!-- Mobile Hamburger -->
+            <div class="mobile-header">
+                <button class="hamburger" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <span class="mobile-title">Invoice<span>Pro</span></span>
+                <button class="theme-toggle-mobile" onclick="toggleTheme()">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <img id="sidebarLogo" src="https://via.placeholder.com/40x40/2563eb/FFFFFF?text=IN" alt="Logo">
+                    <span>Invoice<span>Pro</span></span>
+                    <button class="close-sidebar" onclick="toggleSidebar()"><i class="fas fa-times"></i></button>
+                </div>
+                <nav class="sidebar-nav">
+                    <a href="#" class="nav-item active" data-tab="dashboard">
+                        <i class="fas fa-chart-pie"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="#" class="nav-item" data-tab="invoices">
+                        <i class="fas fa-file-invoice"></i>
+                        <span>Invoices</span>
+                    </a>
+                    <a href="#" class="nav-item" data-tab="customers">
+                        <i class="fas fa-users"></i>
+                        <span>Customers</span>
+                    </a>
+                    <a href="#" class="nav-item" data-tab="products">
+                        <i class="fas fa-box"></i>
+                        <span>Products</span>
+                    </a>
+                    <a href="#" class="nav-item" data-tab="settings">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </a>
+                </nav>
+                <div class="sidebar-footer">
+                    <button class="btn-logout" onclick="handleLogout()">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="main-content" id="mainContent">
+                <header class="top-bar">
+                    <div class="top-bar-left">
+                        <h2 id="pageTitle">Dashboard</h2>
+                    </div>
+                    <div class="top-bar-right">
+                        <button class="theme-toggle" onclick="toggleTheme()">
+                            <i class="fas fa-moon"></i>
+                        </button>
+                        <div class="user-info">
+                            <span id="currentUser">Admin</span>
+                            <div class="avatar" id="userAvatar">A</div>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Tab Content -->
+                <div class="tab-content">
+                    <!-- DASHBOARD -->
+                    <div id="tab-dashboard" class="tab-pane active">
+                        <div class="stats-grid">
+                            <div class="stat-card glass">
+                                <div class="stat-icon" style="background:linear-gradient(135deg,#2563eb,#7c3aed);">
+                                    <i class="fas fa-file-invoice"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3 id="totalInvoices">0</h3>
+                                    <p>Total Invoices</p>
+                                </div>
+                            </div>
+                            <div class="stat-card glass">
+                                <div class="stat-icon" style="background:linear-gradient(135deg,#059669,#10b981);">
+                                    <i class="fas fa-dollar-sign"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3 id="totalRevenue">0</h3>
+                                    <p>Total Revenue</p>
+                                </div>
+                            </div>
+                            <div class="stat-card glass">
+                                <div class="stat-icon" style="background:linear-gradient(135deg,#d97706,#f59e0b);">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3 id="totalCustomers">0</h3>
+                                    <p>Customers</p>
+                                </div>
+                            </div>
+                            <div class="stat-card glass">
+                                <div class="stat-icon" style="background:linear-gradient(135deg,#7c3aed,#8b5cf6);">
+                                    <i class="fas fa-box"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3 id="totalProducts">0</h3>
+                                    <p>Products</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card glass">
+                            <div class="card-header">
+                                <h3><i class="fas fa-clock"></i> Recent Invoices</h3>
+                            </div>
+                            <div class="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Invoice #</th>
+                                            <th>Customer</th>
+                                            <th>Date</th>
+                                            <th>Total</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recentInvoices"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- INVOICES -->
+                    <div id="tab-invoices" class="tab-pane">
+                        <div class="tab-header">
+                            <h3><i class="fas fa-file-invoice"></i> All Invoices</h3>
+                            <button class="btn-primary btn-sm" onclick="openInvoiceModal()">
+                                <i class="fas fa-plus"></i> New
+                            </button>
+                        </div>
+                        <div class="card glass">
+                            <div class="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Invoice #</th>
+                                            <th>Customer</th>
+                                            <th>Date</th>
+                                            <th>Total</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="invoiceTableBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CUSTOMERS -->
+                    <div id="tab-customers" class="tab-pane">
+                        <div class="tab-header">
+                            <h3><i class="fas fa-users"></i> Customers</h3>
+                            <button class="btn-primary btn-sm" onclick="openCustomerModal()">
+                                <i class="fas fa-plus"></i> Add
+                            </button>
+                        </div>
+                        <div class="card glass">
+                            <div class="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Email</th>
+                                            <th>Phone</th>
+                                            <th>Address</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="customerTableBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PRODUCTS -->
+                    <div id="tab-products" class="tab-pane">
+                        <div class="tab-header">
+                            <h3><i class="fas fa-box"></i> Products</h3>
+                            <button class="btn-primary btn-sm" onclick="openProductModal()">
+                                <i class="fas fa-plus"></i> Add
+                            </button>
+                        </div>
+                        <div class="card glass">
+                            <div class="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Code</th>
+                                            <th>Name</th>
+                                            <th>Category</th>
+                                            <th>Price</th>
+                                            <th>Unit</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="productTableBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SETTINGS -->
+                    <div id="tab-settings" class="tab-pane">
+                        <div class="settings-grid">
+                            <div class="card glass">
+                                <h3><i class="fas fa-building"></i> Company Details</h3>
+                                <div class="settings-form">
+                                    <div class="form-group">
+                                        <label>Company Name</label>
+                                        <input type="text" id="companyName" class="form-control">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Email Address</label>
+                                        <input type="email" id="companyEmail" class="form-control">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Phone</label>
+                                        <input type="text" id="companyPhone" class="form-control">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Address</label>
+                                        <textarea id="companyAddress" class="form-control" rows="3"></textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Logo URL</label>
+                                        <div class="input-group-with-btn">
+                                            <input type="text" id="companyLogoUrl" class="form-control" placeholder="https://example.com/logo.png">
+                                            <button class="btn-secondary btn-sm" onclick="updateLogo()">Update</button>
+                                        </div>
+                                    </div>
+                                    <button class="btn-primary" onclick="saveSettings()">Save Settings</button>
+                                </div>
+                            </div>
+                            <div class="card glass">
+                                <h3><i class="fas fa-user-cog"></i> User Management</h3>
+                                <div class="settings-form">
+                                    <div class="form-group">
+                                        <label>Username</label>
+                                        <input type="text" id="settingsUsername" class="form-control">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>New Password</label>
+                                        <input type="password" id="settingsPassword" class="form-control" placeholder="Leave blank to keep current">
+                                    </div>
+                                    <button class="btn-primary" onclick="updateUser()">Update Credentials</button>
+                                </div>
+                                <hr style="border-color:var(--glass-border);margin:20px 0;">
+                                <h3><i class="fas fa-database"></i> Data Management</h3>
+                                <div class="settings-actions">
+                                    <button class="btn-secondary" onclick="exportData()">
+                                        <i class="fas fa-download"></i> Export Backup
+                                    </button>
+                                    <button class="btn-secondary" onclick="document.getElementById('importFile').click()">
+                                        <i class="fas fa-upload"></i> Import Backup
+                                    </button>
+                                    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+                                    <button class="btn-danger" onclick="clearAllData()">
+                                        <i class="fas fa-trash"></i> Clear All
+                                    </button>
+                                    <small>Auto-backup saved in your browser</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL -->
+    <div id="modal" class="modal">
+        <div class="modal-content glass">
+            <div class="modal-header">
+                <h3 id="modalTitle">New Invoice</h3>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- PRINT INVOICE (Hidden) -->
+    <div id="printArea" style="display:none;"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
