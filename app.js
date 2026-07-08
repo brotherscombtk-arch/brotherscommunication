@@ -172,6 +172,8 @@ function loadDashboard() {
 // ============================================
 // INVOICES - FIXED UPDATE
 // ============================================
+let editingInvoiceIndex = null;
+
 function loadInvoices() {
     const invoices = DB.get('invoices', []);
     const tbody = document.getElementById('invoiceTableBody');
@@ -197,7 +199,7 @@ function loadInvoices() {
     `).join('');
 }
 
-function openInvoiceModal(data = null) {
+function openInvoiceModal(data = null, index = null) {
     const modal = document.getElementById('modal');
     const title = document.getElementById('modalTitle');
     const body = document.getElementById('modalBody');
@@ -205,14 +207,10 @@ function openInvoiceModal(data = null) {
     const customers = DB.get('customers', []);
     const products = DB.get('products', []);
 
-    title.textContent = data ? 'Edit Invoice' : 'New Invoice';
+    // Store the index for editing
+    editingInvoiceIndex = index;
 
-    // Store the index if editing
-    let editIndex = -1;
-    if (data) {
-        const invoices = DB.get('invoices', []);
-        editIndex = invoices.indexOf(data);
-    }
+    title.textContent = data ? 'Edit Invoice' : 'New Invoice';
 
     body.innerHTML = `
         <div class="invoice-form">
@@ -241,9 +239,9 @@ function openInvoiceModal(data = null) {
                 <div id="invoiceItemsList">
                     ${data && data.items ? data.items.map((item, idx) => `
                         <div class="invoice-item">
-                            <input type="text" class="form-control item-description" placeholder="Description (e.g., Exam Paper - Math)" value="${item.description || item.product || ''}">
+                            <input type="text" class="form-control item-description" placeholder="e.g., Exam Paper - Mathematics" value="${item.description || item.product || ''}">
                             <input type="number" class="form-control item-qty" placeholder="Qty" value="${item.qty}" onchange="updateItemTotal(this)">
-                            <input type="number" class="form-control item-price" placeholder="Price" value="${item.price}" onchange="updateItemTotal(this)" step="0.01">
+                            <input type="number" class="form-control item-price" placeholder="Price per unit" value="${item.price}" onchange="updateItemTotal(this)" step="0.01">
                             <span class="item-total">${(item.qty * item.price).toFixed(2)}</span>
                             <button class="action-btn delete" onclick="removeInvoiceItem(this)"><i class="fas fa-times"></i></button>
                         </div>
@@ -256,7 +254,7 @@ function openInvoiceModal(data = null) {
             <div class="invoice-total">
                 Total: <span id="invTotal">${data ? data.total.toFixed(2) : '0.00'}</span>
             </div>
-            <button class="btn-primary" onclick="saveInvoice(${editIndex})">
+            <button class="btn-primary" onclick="saveInvoice()">
                 <i class="fas fa-save"></i> ${data ? 'Update' : 'Create'} Invoice
             </button>
         </div>
@@ -272,12 +270,13 @@ function openInvoiceModal(data = null) {
 
 function addInvoiceItem() {
     const container = document.getElementById('invoiceItemsList');
+    const products = DB.get('products', []);
     const div = document.createElement('div');
     div.className = 'invoice-item';
     div.innerHTML = `
-        <input type="text" class="form-control item-description" placeholder="Description (e.g., Exam Paper - Math)" value="">
+        <input type="text" class="form-control item-description" placeholder="e.g., Exam Paper - Mathematics" value="">
         <input type="number" class="form-control item-qty" placeholder="Qty" value="1" onchange="updateItemTotal(this)">
-        <input type="number" class="form-control item-price" placeholder="Price" value="0" onchange="updateItemTotal(this)" step="0.01">
+        <input type="number" class="form-control item-price" placeholder="Price per unit" value="0" onchange="updateItemTotal(this)" step="0.01">
         <span class="item-total">0.00</span>
         <button class="action-btn delete" onclick="removeInvoiceItem(this)"><i class="fas fa-times"></i></button>
     `;
@@ -313,7 +312,7 @@ function calculateInvoiceTotal() {
     document.getElementById('invTotal').textContent = sum.toFixed(2);
 }
 
-function saveInvoice(editIndex) {
+function saveInvoice() {
     const customer = document.getElementById('invCustomer').value;
     const date = document.getElementById('invDate').value;
     const status = document.getElementById('invStatus').value;
@@ -342,21 +341,28 @@ function saveInvoice(editIndex) {
     const total = items.reduce((sum, item) => sum + (item.qty * item.price), 0);
     const invoices = DB.get('invoices', []);
 
-    if (editIndex !== -1 && editIndex !== undefined && editIndex !== null) {
+    if (editingInvoiceIndex !== null && editingInvoiceIndex !== undefined) {
         // UPDATE EXISTING INVOICE
-        invoices[editIndex] = { 
-            ...invoices[editIndex], 
-            customer, 
-            date, 
-            status, 
-            items, 
-            total 
-        };
-        DB.set('invoices', invoices);
-        closeModal();
-        loadInvoices();
-        loadDashboard();
-        showNotification('Invoice updated successfully!');
+        const existingInvoice = invoices[editingInvoiceIndex];
+        if (existingInvoice) {
+            invoices[editingInvoiceIndex] = { 
+                ...existingInvoice,
+                customer, 
+                date, 
+                status, 
+                items, 
+                total 
+            };
+            DB.set('invoices', invoices);
+            closeModal();
+            loadInvoices();
+            loadDashboard();
+            editingInvoiceIndex = null;
+            showNotification('Invoice updated successfully!');
+        } else {
+            showNotification('Error: Invoice not found', 'error');
+            editingInvoiceIndex = null;
+        }
     } else {
         // CREATE NEW INVOICE
         invoices.push({
@@ -390,7 +396,7 @@ function deleteInvoice(index) {
 function editInvoice(index) {
     const invoices = DB.get('invoices', []);
     if (invoices[index]) {
-        openInvoiceModal(invoices[index]);
+        openInvoiceModal(invoices[index], index);
     }
 }
 
@@ -617,11 +623,11 @@ function openProductModal(data = null) {
             <div class="form-row">
                 <div class="form-group">
                     <label>Code *</label>
-                    <input type="text" id="prodCode" class="form-control" value="${data ? data.code : ''}" placeholder="Product code">
+                    <input type="text" id="prodCode" class="form-control" value="${data ? data.code : ''}" placeholder="e.g., PRT001">
                 </div>
                 <div class="form-group">
                     <label>Name *</label>
-                    <input type="text" id="prodName" class="form-control" value="${data ? data.name : ''}" placeholder="Product name">
+                    <input type="text" id="prodName" class="form-control" value="${data ? data.name : ''}" placeholder="e.g., Printing Service">
                 </div>
             </div>
             <div class="form-row">
@@ -631,7 +637,7 @@ function openProductModal(data = null) {
                 </div>
                 <div class="form-group">
                     <label>Unit</label>
-                    <input type="text" id="prodUnit" class="form-control" value="${data ? data.unit : 'pcs'}" placeholder="pcs, kg, etc.">
+                    <input type="text" id="prodUnit" class="form-control" value="${data ? data.unit : 'pcs'}" placeholder="e.g., pcs, kg, hour">
                 </div>
             </div>
             <button class="btn-primary" onclick="saveProduct(${data ? JSON.stringify(data) : 'null'})">
@@ -849,6 +855,7 @@ function loadTheme() {
 // ============================================
 function closeModal() {
     document.getElementById('modal').style.display = 'none';
+    editingInvoiceIndex = null;
 }
 
 window.onclick = function(event) {
