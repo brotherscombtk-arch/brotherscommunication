@@ -170,7 +170,7 @@ function loadDashboard() {
 }
 
 // ============================================
-// INVOICES (FIXED UPDATE)
+// INVOICES - FIXED UPDATE
 // ============================================
 function loadInvoices() {
     const invoices = DB.get('invoices', []);
@@ -242,10 +242,6 @@ function openInvoiceModal(data = null) {
                     ${data && data.items ? data.items.map((item, idx) => `
                         <div class="invoice-item">
                             <input type="text" class="form-control item-description" placeholder="Description (e.g., Exam Paper - Math)" value="${item.description || item.product || ''}">
-                            <select class="form-control item-product" onchange="updateItemTotal(this)">
-                                <option value="">Select Product</option>
-                                ${products.map(p => `<option value="${p.name}" data-price="${p.price}" ${item.product === p.name ? 'selected' : ''}>${p.name} - ${p.price}</option>`).join('')}
-                            </select>
                             <input type="number" class="form-control item-qty" placeholder="Qty" value="${item.qty}" onchange="updateItemTotal(this)">
                             <input type="number" class="form-control item-price" placeholder="Price" value="${item.price}" onchange="updateItemTotal(this)" step="0.01">
                             <span class="item-total">${(item.qty * item.price).toFixed(2)}</span>
@@ -276,15 +272,10 @@ function openInvoiceModal(data = null) {
 
 function addInvoiceItem() {
     const container = document.getElementById('invoiceItemsList');
-    const products = DB.get('products', []);
     const div = document.createElement('div');
     div.className = 'invoice-item';
     div.innerHTML = `
         <input type="text" class="form-control item-description" placeholder="Description (e.g., Exam Paper - Math)" value="">
-        <select class="form-control item-product" onchange="updateItemTotal(this)">
-            <option value="">Select Product</option>
-            ${products.map(p => `<option value="${p.name}" data-price="${p.price}">${p.name} - ${p.price}</option>`).join('')}
-        </select>
         <input type="number" class="form-control item-qty" placeholder="Qty" value="1" onchange="updateItemTotal(this)">
         <input type="number" class="form-control item-price" placeholder="Price" value="0" onchange="updateItemTotal(this)" step="0.01">
         <span class="item-total">0.00</span>
@@ -331,13 +322,12 @@ function saveInvoice(editIndex) {
     const itemElements = document.querySelectorAll('.invoice-item');
     itemElements.forEach(el => {
         const description = el.querySelector('.item-description').value.trim();
-        const product = el.querySelector('.item-product').value;
         const qty = parseFloat(el.querySelector('.item-qty').value) || 0;
         const price = parseFloat(el.querySelector('.item-price').value) || 0;
-        if ((description || product) && qty > 0 && price > 0) {
+        if (description && qty > 0 && price > 0) {
             items.push({ 
-                description: description || product,
-                product: product || description,
+                description: description,
+                product: description,
                 qty, 
                 price 
             });
@@ -362,6 +352,10 @@ function saveInvoice(editIndex) {
             items, 
             total 
         };
+        DB.set('invoices', invoices);
+        closeModal();
+        loadInvoices();
+        loadDashboard();
         showNotification('Invoice updated successfully!');
     } else {
         // CREATE NEW INVOICE
@@ -374,13 +368,12 @@ function saveInvoice(editIndex) {
             total,
             createdAt: new Date().toISOString()
         });
+        DB.set('invoices', invoices);
+        closeModal();
+        loadInvoices();
+        loadDashboard();
         showNotification('Invoice created successfully!');
     }
-
-    DB.set('invoices', invoices);
-    closeModal();
-    loadInvoices();
-    loadDashboard();
 }
 
 function deleteInvoice(index) {
@@ -588,7 +581,7 @@ function editCustomer(index) {
 }
 
 // ============================================
-// PRODUCTS (NO CATEGORIES)
+// PRODUCTS - NO CATEGORIES
 // ============================================
 function loadProducts() {
     const products = DB.get('products', []);
