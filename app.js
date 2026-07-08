@@ -16,7 +16,6 @@ const DB = {
         try {
             const backup = {
                 customers: this.get('customers', []),
-                products: this.get('products', []),
                 invoices: this.get('invoices', []),
                 settings: this.get('settings', {}),
                 users: this.get('users', []),
@@ -120,7 +119,6 @@ document.querySelectorAll('.nav-item').forEach(item => {
             dashboard: 'Dashboard',
             invoices: 'Invoices',
             customers: 'Customers',
-            products: 'Products',
             settings: 'Settings'
         };
         document.getElementById('pageTitle').textContent = titles[tab] || 'Dashboard';
@@ -128,7 +126,6 @@ document.querySelectorAll('.nav-item').forEach(item => {
         if (tab === 'dashboard') loadDashboard();
         if (tab === 'invoices') loadInvoices();
         if (tab === 'customers') loadCustomers();
-        if (tab === 'products') loadProducts();
         if (tab === 'settings') loadSettings();
 
         if (window.innerWidth <= 768) {
@@ -143,11 +140,9 @@ document.querySelectorAll('.nav-item').forEach(item => {
 function loadDashboard() {
     const invoices = DB.get('invoices', []);
     const customers = DB.get('customers', []);
-    const products = DB.get('products', []);
 
     document.getElementById('totalInvoices').textContent = invoices.length;
     document.getElementById('totalCustomers').textContent = customers.length;
-    document.getElementById('totalProducts').textContent = products.length;
 
     const total = invoices.reduce((sum, inv) => sum + (inv.total || 0), 0);
     document.getElementById('totalRevenue').textContent = total.toFixed(2);
@@ -205,7 +200,6 @@ function openInvoiceModal(data = null, index = null) {
     const body = document.getElementById('modalBody');
 
     const customers = DB.get('customers', []);
-    const products = DB.get('products', []);
 
     // Store the index for editing
     editingInvoiceIndex = index;
@@ -270,7 +264,6 @@ function openInvoiceModal(data = null, index = null) {
 
 function addInvoiceItem() {
     const container = document.getElementById('invoiceItemsList');
-    const products = DB.get('products', []);
     const div = document.createElement('div');
     div.className = 'invoice-item';
     div.innerHTML = `
@@ -587,119 +580,6 @@ function editCustomer(index) {
 }
 
 // ============================================
-// PRODUCTS - NO CATEGORIES
-// ============================================
-function loadProducts() {
-    const products = DB.get('products', []);
-    const tbody = document.getElementById('productTableBody');
-    if (products.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:30px;">No products added yet</td></tr>';
-        return;
-    }
-    tbody.innerHTML = products.map((p, i) => `
-        <tr>
-            <td><strong>${p.code || 'N/A'}</strong></td>
-            <td>${p.name}</td>
-            <td>${p.price.toFixed(2)}</td>
-            <td>${p.unit || 'pcs'}</td>
-            <td>
-                <div class="action-btns">
-                    <button class="action-btn edit" onclick="editProduct(${i})"><i class="fas fa-edit"></i></button>
-                    <button class="action-btn delete" onclick="deleteProduct(${i})"><i class="fas fa-trash"></i></button>
-                </div>
-            </td>
-        </tr>
-    `).join('');
-}
-
-function openProductModal(data = null) {
-    const modal = document.getElementById('modal');
-    const title = document.getElementById('modalTitle');
-    const body = document.getElementById('modalBody');
-
-    title.textContent = data ? 'Edit Product' : 'Add Product';
-    body.innerHTML = `
-        <div class="invoice-form">
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Code *</label>
-                    <input type="text" id="prodCode" class="form-control" value="${data ? data.code : ''}" placeholder="e.g., PRT001">
-                </div>
-                <div class="form-group">
-                    <label>Name *</label>
-                    <input type="text" id="prodName" class="form-control" value="${data ? data.name : ''}" placeholder="e.g., Printing Service">
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Price *</label>
-                    <input type="number" id="prodPrice" class="form-control" value="${data ? data.price : ''}" placeholder="0.00" step="0.01">
-                </div>
-                <div class="form-group">
-                    <label>Unit</label>
-                    <input type="text" id="prodUnit" class="form-control" value="${data ? data.unit : 'pcs'}" placeholder="e.g., pcs, kg, hour">
-                </div>
-            </div>
-            <button class="btn-primary" onclick="saveProduct(${data ? JSON.stringify(data) : 'null'})">
-                <i class="fas fa-save"></i> ${data ? 'Update' : 'Add'} Product
-            </button>
-        </div>
-    `;
-    modal.style.display = 'block';
-}
-
-function saveProduct(existingData) {
-    const code = document.getElementById('prodCode').value.trim();
-    const name = document.getElementById('prodName').value.trim();
-    const price = parseFloat(document.getElementById('prodPrice').value);
-    const unit = document.getElementById('prodUnit').value.trim() || 'pcs';
-
-    if (!code || !name || isNaN(price) || price <= 0) {
-        showNotification('Please fill all required fields', 'warning');
-        return;
-    }
-
-    const products = DB.get('products', []);
-    if (existingData) {
-        const index = products.indexOf(existingData);
-        if (index !== -1) {
-            products[index] = { ...existingData, code, name, price, unit };
-        }
-    } else {
-        products.push({
-            id: 'PROD-' + Date.now().toString().slice(-6),
-            code,
-            name,
-            price,
-            unit,
-            createdAt: new Date().toISOString()
-        });
-    }
-
-    DB.set('products', products);
-    closeModal();
-    loadProducts();
-    loadDashboard();
-    showNotification(existingData ? 'Product updated!' : 'Product added!');
-}
-
-function deleteProduct(index) {
-    if (confirm('Delete this product?')) {
-        const products = DB.get('products', []);
-        products.splice(index, 1);
-        DB.set('products', products);
-        loadProducts();
-        loadDashboard();
-        showNotification('Product deleted');
-    }
-}
-
-function editProduct(index) {
-    const products = DB.get('products', []);
-    openProductModal(products[index]);
-}
-
-// ============================================
 // SETTINGS
 // ============================================
 function loadSettings() {
@@ -776,7 +656,6 @@ function updateUser() {
 function exportData() {
     const data = {
         customers: DB.get('customers', []),
-        products: DB.get('products', []),
         invoices: DB.get('invoices', []),
         settings: DB.get('settings', {}),
         users: getUsers(),
@@ -803,7 +682,6 @@ function importData(event) {
         try {
             const data = JSON.parse(e.target.result);
             if (data.customers) DB.set('customers', data.customers);
-            if (data.products) DB.set('products', data.products);
             if (data.invoices) DB.set('invoices', data.invoices);
             if (data.settings) DB.set('settings', data.settings);
             if (data.users) DB.set('users', data.users);
@@ -911,7 +789,6 @@ function loadAllData() {
     loadDashboard();
     loadInvoices();
     loadCustomers();
-    loadProducts();
     loadSettings();
     loadTheme();
 
